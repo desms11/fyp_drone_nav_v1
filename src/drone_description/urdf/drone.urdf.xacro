@@ -1,0 +1,289 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="drone">
+
+  <!-- ============================================================
+       Drone Quadrotor Model
+       Body + 4 arms + 4 rotors + 2D lidar + IMU
+       Designed for 2D SLAM and autonomous navigation
+       ============================================================ -->
+
+  <xacro:property name="body_length" value="0.28"/>
+  <xacro:property name="body_width"  value="0.28"/>
+  <xacro:property name="body_height" value="0.10"/>
+  <xacro:property name="arm_length"  value="0.14"/>
+  <xacro:property name="arm_radius"  value="0.015"/>
+  <xacro:property name="rotor_radius" value="0.08"/>
+  <xacro:property name="rotor_height" value="0.01"/>
+  <xacro:property name="mass_body"   value="0.50"/>
+  <xacro:property name="mass_rotor"  value="0.02"/>
+  <xacro:property name="PI"          value="3.14159265358979"/>
+
+  <!-- ===== Materials ===== -->
+  <material name="dark_grey">
+    <color rgba="0.2 0.2 0.2 1.0"/>
+  </material>
+  <material name="light_grey">
+    <color rgba="0.7 0.7 0.7 1.0"/>
+  </material>
+  <material name="orange">
+    <color rgba="1.0 0.5 0.0 1.0"/>
+  </material>
+  <material name="red">
+    <color rgba="0.9 0.1 0.1 1.0"/>
+  </material>
+  <material name="blue">
+    <color rgba="0.1 0.1 0.9 1.0"/>
+  </material>
+  <material name="black">
+    <color rgba="0.05 0.05 0.05 1.0"/>
+  </material>
+
+  <!-- ===== Base Footprint ===== -->
+  <link name="base_footprint"/>
+
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child  link="base_link"/>
+    <origin xyz="0 0 0.05" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ===== Drone Body ===== -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${body_length} ${body_width} ${body_height}"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${body_length} ${body_width} ${body_height}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="${mass_body}"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia
+        ixx="${mass_body/12.0*(body_width*body_width+body_height*body_height)}"
+        iyy="${mass_body/12.0*(body_length*body_length+body_height*body_height)}"
+        izz="${mass_body/12.0*(body_length*body_length+body_width*body_width)}"
+        ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <!-- ===== Rotor Macro ===== -->
+  <xacro:macro name="rotor" params="name x y cw">
+    <!-- Arm -->
+    <link name="${name}_arm">
+      <visual>
+        <origin xyz="${x/2} ${y/2} 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${arm_radius}" length="${arm_length * 1.414}"/>
+        </geometry>
+        <material name="light_grey"/>
+      </visual>
+      <inertial>
+        <mass value="0.01"/>
+        <inertia ixx="0.0001" iyy="0.0001" izz="0.0001" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+    <joint name="${name}_arm_joint" type="fixed">
+      <parent link="base_link"/>
+      <child  link="${name}_arm"/>
+      <origin xyz="0 0 0" rpy="0 0 ${cw == 1 ? 0.785398 : -0.785398 + PI}"/>
+    </joint>
+
+    <!-- Rotor hub -->
+    <link name="${name}">
+      <visual>
+        <origin xyz="0 0 0.015" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${rotor_radius}" length="${rotor_height}"/>
+        </geometry>
+        <material name="${cw == 1 ? 'orange' : 'blue'}"/>
+      </visual>
+      <inertial>
+        <mass value="${mass_rotor}"/>
+        <inertia ixx="0.00001" iyy="0.00001" izz="0.00001" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+    <joint name="${name}_joint" type="continuous">
+      <parent link="base_link"/>
+      <child  link="${name}"/>
+      <origin xyz="${x} ${y} 0.005" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- Instantiate 4 rotors: front-left, front-right, rear-left, rear-right -->
+  <xacro:rotor name="rotor_fl" x=" ${arm_length}" y=" ${arm_length}" cw="1"/>
+  <xacro:rotor name="rotor_fr" x=" ${arm_length}" y="-${arm_length}" cw="-1"/>
+  <xacro:rotor name="rotor_rl" x="-${arm_length}" y=" ${arm_length}" cw="-1"/>
+  <xacro:rotor name="rotor_rr" x="-${arm_length}" y="-${arm_length}" cw="1"/>
+
+  <!-- ===== Lidar Link ===== -->
+  <link name="lidar_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.04" length="0.04"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.04" length="0.04"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.05"/>
+      <inertia ixx="0.00001" iyy="0.00001" izz="0.00001" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+  <joint name="lidar_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="lidar_link"/>
+    <origin xyz="0 0 0.07" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ===== IMU Link ===== -->
+  <link name="imu_link">
+    <inertial>
+      <mass value="0.001"/>
+      <inertia ixx="0.000001" iyy="0.000001" izz="0.000001" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="imu_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ===== Camera Link (optional, for visual reference) ===== -->
+  <link name="camera_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.03 0.05 0.03"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <inertial>
+      <mass value="0.01"/>
+      <inertia ixx="0.00001" iyy="0.00001" izz="0.00001" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="camera_link"/>
+    <origin xyz="0.15 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ===== Gazebo Plugins ===== -->
+
+  <!-- Diff drive for cmd_vel → movement (simulates drone in 2D plane at fixed altitude).
+       Uses front-left / front-right rotors as the virtual wheel pair.
+       The rear rotors are fixed and contribute to the visual only. -->
+  <gazebo>
+    <plugin filename="gz-sim-diff-drive-system"
+            name="gz::sim::systems::DiffDrive">
+      <left_joint>rotor_fl_joint</left_joint>
+      <right_joint>rotor_fr_joint</right_joint>
+      <wheel_separation>${body_width}</wheel_separation>
+      <wheel_radius>${rotor_radius}</wheel_radius>
+      <odom_publish_frequency>30</odom_publish_frequency>
+      <topic>cmd_vel</topic>
+      <odom_topic>odom</odom_topic>
+      <tf_topic>tf</tf_topic>
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_link</child_frame_id>
+      <max_linear_acceleration>1.0</max_linear_acceleration>
+    </plugin>
+  </gazebo>
+
+  <!-- Joint State Publisher -->
+  <gazebo>
+    <plugin filename="gz-sim-joint-state-publisher-system"
+            name="gz::sim::systems::JointStatePublisher">
+      <topic>joint_states</topic>
+    </plugin>
+  </gazebo>
+
+  <!-- Pose publisher for TF -->
+  <gazebo>
+    <plugin filename="gz-sim-pose-publisher-system"
+            name="gz::sim::systems::PosePublisher">
+      <publish_link_pose>true</publish_link_pose>
+      <use_pose_vector_msg>true</use_pose_vector_msg>
+      <static_publisher>true</static_publisher>
+      <static_update_frequency>1</static_update_frequency>
+    </plugin>
+  </gazebo>
+
+  <!-- Odometry publisher -->
+  <gazebo>
+    <plugin filename="gz-sim-odometry-publisher-system"
+            name="gz::sim::systems::OdometryPublisher">
+      <odom_frame>odom</odom_frame>
+      <robot_base_frame>base_link</robot_base_frame>
+      <odom_topic>odom</odom_topic>
+      <odom_publish_frequency>30</odom_publish_frequency>
+    </plugin>
+  </gazebo>
+
+  <!-- 2D Lidar Sensor -->
+  <gazebo reference="lidar_link">
+    <sensor name="lidar" type="gpu_lidar">
+      <update_rate>10</update_rate>
+      <topic>scan</topic>
+      <gz_frame_id>lidar_link</gz_frame_id>
+      <lidar>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-${PI}</min_angle>
+            <max_angle>${PI}</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.12</min>
+          <max>10.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </lidar>
+      <alwaysOn>true</alwaysOn>
+      <visualize>true</visualize>
+    </sensor>
+  </gazebo>
+
+  <!-- IMU Sensor -->
+  <gazebo reference="imu_link">
+    <sensor name="imu_sensor" type="imu">
+      <topic>imu</topic>
+      <update_rate>100</update_rate>
+      <gz_frame_id>imu_link</gz_frame_id>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>0.00018665</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>0.00018665</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>0.00018665</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>0.00186</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>0.00186</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>0.00186</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+    </sensor>
+  </gazebo>
+
+</robot>
