@@ -1,6 +1,10 @@
 # ros_gz_bridge topic configuration
-# Maps Gazebo topics → ROS 2 topics and vice-versa
+# Maps Gazebo topics <-> ROS 2 topics
 # Reference: https://github.com/gazebosim/ros_gz/tree/ros2/ros_gz_bridge
+#
+# Gazebo topic names match exactly what the URDF plugins publish.
+# The DiffDrive plugin publishes to "cmd_vel", "odom", and "tf".
+# The sensors publish to "scan", "imu" (bare names from plugin <topic> elements).
 #
 # Format:
 #   - ros_topic_name: <ros_topic>
@@ -9,51 +13,44 @@
 #     gz_type_name:   <gz_msg_type>
 #     direction:      BIDIRECTIONAL | ROS_TO_GZ | GZ_TO_ROS
 
-# ── Drone velocity command (ROS → Gazebo) ────────────────────────────────────
-- ros_topic_name: /cmd_vel
-  gz_topic_name:  /drone/cmd_vel
-  ros_type_name:  geometry_msgs/msg/Twist
-  gz_type_name:   gz.msgs.Twist
-  direction:      ROS_TO_GZ
-
-# ── Odometry (Gazebo → ROS) ──────────────────────────────────────────────────
-- ros_topic_name: /odom
-  gz_topic_name:  /drone/odometry_with_covariance
-  ros_type_name:  nav_msgs/msg/Odometry
-  gz_type_name:   gz.msgs.OdometryWithCovariance
-  direction:      GZ_TO_ROS
-
-# ── Laser scan (Gazebo → ROS) ────────────────────────────────────────────────
-- ros_topic_name: /scan
-  gz_topic_name:  /drone/scan
-  ros_type_name:  sensor_msgs/msg/LaserScan
-  gz_type_name:   gz.msgs.LaserScan
-  direction:      GZ_TO_ROS
-
-# ── IMU (Gazebo → ROS) ──────────────────────────────────────────────────────
-- ros_topic_name: /imu
-  gz_topic_name:  /drone/imu
-  ros_type_name:  sensor_msgs/msg/Imu
-  gz_type_name:   gz.msgs.IMU
-  direction:      GZ_TO_ROS
-
-# ── Joint states (Gazebo → ROS) ─────────────────────────────────────────────
-- ros_topic_name: /joint_states
-  gz_topic_name:  /drone/joint_states
-  ros_type_name:  sensor_msgs/msg/JointState
-  gz_type_name:   gz.msgs.Model
-  direction:      GZ_TO_ROS
-
-# ── TF (Gazebo pose → ROS TF) ────────────────────────────────────────────────
-- ros_topic_name: /tf
-  gz_topic_name:  /model/drone/pose
-  ros_type_name:  tf2_msgs/msg/TFMessage
-  gz_type_name:   gz.msgs.Pose_V
-  direction:      GZ_TO_ROS
-
-# ── Clock (Gazebo → ROS) ─────────────────────────────────────────────────────
+# Clock (Gazebo -> ROS)
 - ros_topic_name: /clock
   gz_topic_name:  /clock
   ros_type_name:  rosgraph_msgs/msg/Clock
   gz_type_name:   gz.msgs.Clock
+  direction:      GZ_TO_ROS
+
+# Drone velocity command (ROS -> Gazebo)
+- ros_topic_name: /cmd_vel
+  gz_topic_name:  /cmd_vel
+  ros_type_name:  geometry_msgs/msg/Twist
+  gz_type_name:   gz.msgs.Twist
+  direction:      ROS_TO_GZ
+
+# Odometry (Gazebo -> ROS)
+- ros_topic_name: /odom
+  gz_topic_name:  /odom
+  ros_type_name:  nav_msgs/msg/Odometry
+  gz_type_name:   gz.msgs.Odometry
+  direction:      GZ_TO_ROS
+
+# Laser scan (Gazebo -> ROS)
+- ros_topic_name: /scan
+  gz_topic_name:  /scan
+  ros_type_name:  sensor_msgs/msg/LaserScan
+  gz_type_name:   gz.msgs.LaserScan
+  direction:      GZ_TO_ROS
+
+# IMU (Gazebo -> ROS)
+- ros_topic_name: /imu
+  gz_topic_name:  /imu
+  ros_type_name:  sensor_msgs/msg/Imu
+  gz_type_name:   gz.msgs.IMU
+  direction:      GZ_TO_ROS
+
+# TF from diff-drive plugin (Gazebo -> ROS)
+- ros_topic_name: /tf
+  gz_topic_name:  /tf
+  ros_type_name:  tf2_msgs/msg/TFMessage
+  gz_type_name:   gz.msgs.Pose_V
   direction:      GZ_TO_ROS

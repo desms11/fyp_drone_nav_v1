@@ -184,19 +184,20 @@
 
   <!-- ===== Gazebo Plugins ===== -->
 
-  <!-- Diff drive for cmd_vel → movement (simulates drone in 2D plane at fixed altitude) -->
+  <!-- Diff drive for cmd_vel → movement (simulates drone in 2D plane at fixed altitude).
+       Uses front-left / front-right rotors as the virtual wheel pair.
+       The rear rotors are fixed and contribute to the visual only. -->
   <gazebo>
     <plugin filename="gz-sim-diff-drive-system"
             name="gz::sim::systems::DiffDrive">
       <left_joint>rotor_fl_joint</left_joint>
       <right_joint>rotor_fr_joint</right_joint>
-      <left_joint>rotor_rl_joint</left_joint>
-      <right_joint>rotor_rr_joint</right_joint>
       <wheel_separation>${body_width}</wheel_separation>
       <wheel_radius>${rotor_radius}</wheel_radius>
       <odom_publish_frequency>30</odom_publish_frequency>
       <topic>cmd_vel</topic>
       <odom_topic>odom</odom_topic>
+      <tf_topic>tf</tf_topic>
       <frame_id>odom</frame_id>
       <child_frame_id>base_link</child_frame_id>
       <max_linear_acceleration>1.0</max_linear_acceleration>

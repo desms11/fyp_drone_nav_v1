@@ -37,11 +37,6 @@ def generate_launch_description():
         name="slam_toolbox",
         output="screen",
         parameters=[LaunchConfiguration("slam_params_file"), {"use_sim_time": True}],
-        remappings=[
-            ("/scan", "/scan"),
-            ("/map", "/map"),
-            ("/odom", "/odom"),
-        ],
     )
 
     return LaunchDescription([

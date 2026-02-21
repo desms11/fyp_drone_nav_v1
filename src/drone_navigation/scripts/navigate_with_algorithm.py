@@ -2,7 +2,7 @@
 """
 drone_navigation/scripts/navigate_with_algorithm.py
 
-CLI tool to send a navigation goal and choose the planning algorithm.
+CLI tool to send a navigation goal with the chosen planning algorithm.
 
 Usage:
   ros2 run drone_navigation navigate_with_algorithm.py \\
@@ -12,11 +12,11 @@ Usage:
 
   Algorithms: dijkstra | astar | smac
 
-The script:
-  1. Reconfigures the planner_server to use the requested algorithm.
-  2. Sends the initial pose (point A) to AMCL / pose estimator.
-  3. Sends the navigation goal (point B) to Nav2.
-  4. Monitors the action until completion.
+The algorithm selection is made at Nav2 launch time via the
+`algorithm:=` argument to navigation.launch.py, which loads the
+corresponding Nav2 parameter file with the right planner plugin.
+This script sends the initial pose and navigation goal to a running
+Nav2 stack.
 """
 
 import argparse
@@ -32,21 +32,9 @@ from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile, QoSReli
 from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from nav2_msgs.action import NavigateToPose
-from rcl_interfaces.msg import Parameter, ParameterValue
-from rcl_interfaces.srv import SetParameters
 
 
-ALGORITHM_PLUGIN_MAP = {
-    "dijkstra": "nav2_navfn_planner/NavfnPlanner",
-    "astar":    "nav2_navfn_planner/NavfnPlanner",
-    "smac":     "nav2_smac_planner/SmacPlannerHybrid",
-}
-
-ALGORITHM_USE_ASTAR_MAP = {
-    "dijkstra": False,
-    "astar":    True,
-    "smac":     None,   # Not applicable
-}
+VALID_ALGORITHMS = {"dijkstra", "astar", "smac"}
 
 
 class NavigationClient(Node):
@@ -54,7 +42,7 @@ class NavigationClient(Node):
     def __init__(self, algorithm: str):
         super().__init__("navigation_client")
         self.algorithm = algorithm.lower()
-        if self.algorithm not in ALGORITHM_PLUGIN_MAP:
+        if self.algorithm not in VALID_ALGORITHMS:
             self.get_logger().error(
                 f"Unknown algorithm '{algorithm}'. Choose from: dijkstra, astar, smac"
             )
