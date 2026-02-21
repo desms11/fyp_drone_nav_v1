@@ -6,8 +6,14 @@ find_package(ament_cmake REQUIRED)
 install(DIRECTORY
   config
   launch
-  maps
   DESTINATION share/${PROJECT_NAME}
 )
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/maps")
+  install(DIRECTORY
+    maps
+    DESTINATION share/${PROJECT_NAME}
+  )
+endif()
 
 ament_package()

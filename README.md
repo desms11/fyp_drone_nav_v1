@@ -490,6 +490,33 @@ colcon build --packages-select drone_description --symlink-install
 source install/setup.bash
 ```
 
+### `colcon build --symlink-install` fails with missing `meshes`, `maps`, or `models`
+
+If you see an error like:
+
+```text
+ament_cmake_symlink_install_directory() can't find '/.../src/<package>/<folder>'
+```
+
+it means the package `CMakeLists.txt` tries to install an asset folder that is not present in your local checkout.
+
+In this repository, `meshes` (in `drone_description`), `maps` (in `drone_slam`), and `models` (in `drone_gazebo`) are optional unless you provide custom resources.
+
+The fix is to guard those install entries with:
+
+```cmake
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/<folder>")
+  install(DIRECTORY <folder> DESTINATION share/${PROJECT_NAME})
+endif()
+```
+
+Then rebuild:
+
+```bash
+colcon build --symlink-install
+source install/setup.bash
+```
+
 ---
 
 ## References

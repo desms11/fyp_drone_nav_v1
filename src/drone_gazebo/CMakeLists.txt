@@ -5,9 +5,15 @@ find_package(ament_cmake REQUIRED)
 
 install(DIRECTORY
   worlds
-  models
   launch
   DESTINATION share/${PROJECT_NAME}
 )
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/models")
+  install(DIRECTORY
+    models
+    DESTINATION share/${PROJECT_NAME}
+  )
+endif()
 
 ament_package()
