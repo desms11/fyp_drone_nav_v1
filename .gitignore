@@ -1,0 +1,30 @@
+# ROS 2 build artefacts
+build/
+install/
+log/
+.ros/
+
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.eggs/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Gazebo cache / logs
+~/.ignition/
+~/.gazebo/
+/tmp/
+
+# Map files (generated at runtime – user saves them to ~/maps)
+*.pgm
+*.yaml.bak
