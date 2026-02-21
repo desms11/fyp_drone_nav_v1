@@ -92,7 +92,7 @@
     <joint name="${name}_arm_joint" type="fixed">
       <parent link="base_link"/>
       <child  link="${name}_arm"/>
-      <origin xyz="0 0 0" rpy="0 0 ${cw == 1 ? 0.785398 : -0.785398 + PI}"/>
+      <origin xyz="0 0 0" rpy="0 0 ${0.785398 if cw == 1 else -0.785398 + PI}"/>
     </joint>
 
     <!-- Rotor hub -->
@@ -102,7 +102,7 @@
         <geometry>
           <cylinder radius="${rotor_radius}" length="${rotor_height}"/>
         </geometry>
-        <material name="${cw == 1 ? 'orange' : 'blue'}"/>
+        <material name="${'orange' if cw == 1 else 'blue'}"/>
       </visual>
       <inertial>
         <mass value="${mass_rotor}"/>
